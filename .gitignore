@@ -1,0 +1,4 @@
+.venv/
+release/
+__pycache__/
+.vaws-local/
