@@ -9,5 +9,4 @@ Markdown checks. Do not commit private endpoints, user paths or credentials.
 
 Runtime implementation belongs in `vllm-ascend-workspace/vaws-knowledge`.
 CI uses a fixed reviewed package revision. It never imports Python modules
-from a proposed corpus checkout. Human reviewers decide whether to merge;
-Grok and automatic PR merging are deferred.
+from a proposed corpus checkout. Human reviewers decide whether to merge.

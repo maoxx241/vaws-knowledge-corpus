@@ -10,7 +10,7 @@ paths, endpoints and credentials before opening a pull request. The
 submit it through your fork.
 
 Pull requests currently receive format and redaction checks, followed by
-human review and merge. Grok review and automatic merge are not enabled.
+human review and merge.
 Publishing a report does not establish that it has been reproduced elsewhere.
 
 After a merge to `main`, the release workflow builds a dense OVPack on CPU
