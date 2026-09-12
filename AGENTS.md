@@ -19,6 +19,23 @@ Experience here concerns vLLM Ascend models, operators and business execution.
 Do not contribute VAWS package, control-plane, client wiring or knowledge-engine
 development cases; keep those with their owning projects.
 
+Knowledge uses fixed semantic category/entry paths, for example
+`corpus/knowledge/graph/buffers.md`; identical text does not merge different
+entries. Experiences retain stable case identities. Preserve existing filenames,
+including old hash prefixes, when correcting titles, evidence or conclusions.
+An experience's similar title or symptom does not prove it is the same case.
+The package keeps the current content digest separately for change detection
+and integrity. Agents can revise a local candidate by `ref`, select a knowledge
+entry by `public_relpath="knowledge/CATEGORY/ENTRY.md"`, or correct an existing
+shared case with `public_relpath="experience/CASE.md"`.
+
+Optional `experience_feedback(ref, vote)` records `+1` when a published case
+helped or `-1` when it misled the work. No reason or extra summary is required.
+The package creates or reuses a GitHub feedback Issue and reacts with the
+configured account; repeated votes do not accumulate. Feedback stays on GitHub,
+outside the article and release pack. It does not certify correctness, change
+retrieval ranking or automatically promote experience to knowledge.
+
 Public contributions must pass the installed `vaws-knowledge` redaction and
 Markdown checks. Do not commit private endpoints, user paths or credentials.
 

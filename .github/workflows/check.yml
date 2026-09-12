@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install fixed knowledge engine
-        run: python -m pip install 'vaws-knowledge @ git+https://github.com/vllm-ascend-workspace/vaws-knowledge@ff202f5df0a11937d50439e4909b9b956de26b0a'
+        run: python -m pip install 'vaws-knowledge @ git+https://github.com/vllm-ascend-workspace/vaws-knowledge@677a0055d00c1c4315400cb47f2becf49be8ca02'
       # Treat the checkout only as data; never import its Python modules.
       - name: Check Markdown and redaction
         run: python -I -m vaws_knowledge.corpus_check --repo "$GITHUB_WORKSPACE"
