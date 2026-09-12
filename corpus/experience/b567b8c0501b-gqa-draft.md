@@ -1,7 +1,18 @@
-# 用同一请求确认 GQA draft 需要物化后的残差输入
+# GQA DSpark 的辅助特征取错残差流，模型仍能正常出字
 
-2026-08-23，Kimi K3 迁移后 target 能正常生成，但旧 GQA DSpark 的采信与延迟没有回到已知基线。调查追到 target 输出给 draft 的 auxiliary stream：旧 GQA checkpoint 消费 attention-residual mixer 物化后的输入，MLA draft 则沿上游 raw stream，二者不能只按相同层号互换。
+2026 年 8 月的 Kimi K3／vLLM 0.27 迁移中，target 能启动、完成请求，并不能证明 draft 接线正确。GQA DSpark 的采信表现偏离既有运行后，调查从“draft 能否加载”转向了“target 在哪个位置交出辅助 hidden states”。
 
-模型和 runner 增加明确的 capture-mode 选择，分别覆盖 GQA 与 MLA。随后在 A3 四节点 DP4×TP16×EP64 环境，使用同一个 8192-token 输入与 1024-token 输出设置，重置 prefix cache 后做两轮请求。原始第二轮记录四个 DP 请求全部成功，逐 rank 的输出检查通过，并保存了公共前缀比例、图档、请求 hash、采信计数和 TPOT，避免把不同输入或 warm 状态的数字拿来直接比较。
+当时存在两种都具有正确形状、却不是相同数值的输入。Kimi 层间保留 raw prefix-sum stream；真正进入下一层 attention 的输入还要经过 Attention Residual mixer，将 prefix sum 与此前残差块混合。旧 Qwen3 GQA DSpark checkpoint 消费后者，MLA draft 则沿用上游的 raw stream。统一修改捕获位置会修好一种 draft，同时改变另一种 draft 的输入语义。
 
-这次调查支持“draft 输入表示不匹配”这一具体集成修正。没有把两轮请求的收益推广成通用性能结论，也没有用另一个 draft 或 GPQA 分数替代同请求对照。模型、checkpoint 家族或 capture 入口发生变化时，层号偏移规则和 stream 选择必须重新核对。[历史模型集成记录](https://github.com/vllm-project/vllm-ascend/pull/14454)。
+修复在 runner 中按 draft 配置选择模式，再通过 `set_dspark_aux_capture_materialized()` 传给模型。选择条件涉及 DSpark 方法以及 Qwen3 GQA 的模型类型、架构；没有把“启用了推测解码”直接等同于 materialized 模式。模型侧保留两个位置：
+
+| 模式 | 当时的捕获位置 | 捕获内容 |
+| --- | --- | --- |
+| materialized GQA | 执行选中层之前，层号属于辅助层集合 | 用该层的 residual projection、norm 和有效残差块数计算 mixer 输出 |
+| raw MLA | 执行上一层之后，以 `layer_idx + 1` 对齐辅助层集合 | 尚未经过下一层 mixer 的 hidden states |
+
+回归测试没有只比较 tensor shape。它用可辨识的假层和 mixer：普通层输出增加 10，mixer 按有效块数增加 100；相同辅助层选择在 materialized 模式得到 `111`，raw 模式得到 `11`。这个构造能直接识别捕获早了一层、晚了一层，或把 mixer 漏掉的错误。另有 runner 分类及两层模型包装的参数转发测试，避免开关停在外层而未到达真正执行模型。
+
+设备侧以 A3 四节点、DP4×TP16×EP64 的既有服务做有界复核。各节点 16 个 worker 均记录 materialized GQA 模式；固定同一份 8192-token 输入、请求 1024-token 输出，每轮先对四个 DP 实例重置 prefix cache，再向四个 DP 各发一次请求。第二轮四路成功，并检查了全 rank 错误日志。这支持该次 GQA 接线修复已进入实际运行；不能据此声称 MLA 也完成同样硬件矩阵，或把两轮请求的时延当成通用性能收益。
+
+此案例对应当时的 [Kimi K3 迁移工作](https://github.com/vllm-project/vllm-ascend/pull/14454)。可复用的定位点是辅助特征的语义与层号约定：当 target 正常而 draft 异常时，需要同时追踪生成方的捕获位置和消费方训练时预期的残差流。

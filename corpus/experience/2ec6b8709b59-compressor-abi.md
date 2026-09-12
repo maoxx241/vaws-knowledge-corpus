@@ -1,9 +1,16 @@
 # 排查 Compressor 接口时，先分清逻辑布局、存储格式和 ABI
 
-2026 年 8 月的一次 Compressor 接入调查中，讨论把 `TH`、模型 hidden size 和算子注册的 `FORMAT_ND` 混在了一起。单看函数名或注册格式，无法确定调用方传的 RoPE 张量到底表示什么。
+2026 年 8 月的一次 Compressor 接入调查中，讨论把 `TH`、模型 hidden size 和注册的 `FORMAT_ND` 混在了一起。真正需要回答的是：调用方传来的 RoPE 张量每个维度表示什么，以及这份张量以哪些参数抵达设备算子。
 
-调查先回到 Python consumer 和 C++ binding。原始源码输出显示，metadata 入口显式检查 `rope_cos`、`rope_sin` 为二维，调用前按首尾维整理 RoPE cache。这里的 T 是 RoPE 的位置行数，H 是对应的 RoPE/head 维度；不能把 H 自动解释为模型 hidden size，也不能把完整 RoPE cache 的行数当作本轮 batch token 数。
+调查从 Python consumer 的 `_compute_metadata` 开始。原代码把 `full_compress_cos/sin` 用首维与末维整理成二维，再调用 `torch.ops._C_ascend.compressor_metadata`。这里的 T 是 RoPE 位置表的行数，H 是 RoPE/head 维度，不是模型全局 hidden size；完整位置表的行数也不是本次调度的 token 数。下表是当时 binding 实际检查的不同对象：
 
-继续检查注册与下游，`FORMAT_ND` 描述存储格式，并没有取消二维逻辑 shape 的要求。metadata 输出还会经过后续 view；主 Compressor 的输入布局与 metadata 入口也需要分别阅读。另一个实际发现是 binding 会取 state cache 的 stride 并传入 ACLNN，因此“同名符号存在”仍不足以证明两份编译产物具有相同 ABI。
+| 对象 | 当时的逻辑约束 | 容易混淆的含义 |
+|---|---|---|
+| `rope_cos`、`rope_sin` | 非空二维，同 shape、同 dtype | 位置表，不是本轮压缩结果 |
+| `cu_seqlens`、`start_pos` | 一维；容量覆盖实际请求 | 请求边界和起始位置，不是物理缓存地址 |
+| `kv_block_table` | 二维；行数覆盖实际请求 | 物理 block 映射 |
+| `slot_mapping` | flat 或 `(block, offset)` 表示 | 输出行数由压缩后容量决定 |
 
-这次工作形成的是源码接口差分，没有完成算子替换或真机验收，也没有证明任意 CANN 镜像、权重和 recipe 可以互换。保留下来的经验是：分别写清张量的逻辑含义、shape/stride 和实际参数序列，再核对同一版本的调用双方。涉及跨仓配套、single/split state 的历史规则未作为当前选型建议保留。
+调用使用 `storage_block_size` 和明确的 slot 格式；原始消费者把返回的 cos/sin 再展平后传给主 Compressor。不能因为两个入口都叫 Compressor，就把主算子的 BSH/TH 输入布局套给 metadata 入口。注册中的 `FORMAT_ND` 描述存储格式，`AutoContiguous` 又涉及适配行为，它们都没有取消二维逻辑 shape 检查。
+
+继续读 C++ binding 还发现，主 Compressor 会读取 `state_cache.stride(0)`，把它作为额外标量传给 `aclnnCompressor`。因此 ABI 对照必须覆盖张量顺序、可选参数、标量顺序及 stride 的含义：只看到同名符号，不能证明另一份库接受同一调用。该次产出是源码接口差分，未完成替换或设备验收；可据此先检查调用双方，再决定需要补哪一种真实 shape/layout 测试。
