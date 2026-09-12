@@ -31,8 +31,11 @@ shared case with `public_relpath="experience/CASE.md"`.
 
 Optional `experience_feedback(ref, vote)` records `+1` when a published case
 helped or `-1` when it misled the work. No reason or extra summary is required.
-The package creates or reuses a GitHub feedback Issue and reacts with the
-configured account; repeated votes do not accumulate. Feedback stays on GitHub,
+The package records each usage feedback as a minimal comment on the experience's
+GitHub feedback Issue. Both positive and negative feedback accumulate, including
+repeated feedback from the same account; neither removes earlier events.
+Normal calls need only ref and vote. Reuse a failed call's returned `request_id`
+only to retry that event; omit it for a new usage event. Feedback stays on GitHub,
 outside the article and release pack. It does not certify correctness, change
 retrieval ranking or automatically promote experience to knowledge.
 
