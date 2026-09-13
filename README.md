@@ -23,4 +23,24 @@ Runtime code and client setup belong to
 [vaws-knowledge](https://github.com/vllm-ascend-workspace/vaws-knowledge).
 This repository contains knowledge, publishing policy and thin CI entrypoints.
 
+## References migrated from the development workspace
+
+The shared corpus maintains the former workspace notes in
+[`corpus/models/`](corpus/models/) (nine model observations),
+[`corpus/debugging/`](corpus/debugging/) (twelve debugging observations), and
+[`corpus/infra/`](corpus/infra/) (one SSH transport observation).
+These directories are browsing aids, not required authoring categories.
+
+Every migrated note links to its exact source commit and retains historical
+conditions and missing evidence. Model titles explicitly mark their unverified
+status; the conflicting GLM-5 layer counts remain unresolved. The old workspace
+filenames remain stable here. Publication does not turn a historical observation
+into a current configuration recommendation.
+
+Maintain reusable vLLM, Ascend NPU, AI and inference infrastructure references
+here. Tool commands, executable analyzer rules, API contracts and VAWS engineering
+validation belong with their implementation. Workspace clients consume these
+notes through the existing shared release; task agents need no migration step,
+extra lookup requirement or local authoring mirror.
+
 License: MIT.
