@@ -14,7 +14,10 @@ human review and merge.
 Publishing a report does not establish that it has been reproduced elsewhere.
 
 After a merge to `main`, the release workflow builds a dense OVPack on CPU
-from the exact Git commit and publishes its manifest and pack together.
+from the exact Git commit and publishes its manifest, pack and hash-bound
+reference metadata together. The Markdown, context spans and any available
+aliases or topics refer to the same source revision. Checks and publishing use
+the same fixed reviewed engine; content changes do not choose executable code.
 Configured clients download and verify the release, import its stored vectors,
 then switch the shared version. Failed updates retain the previous version;
 project and candidate knowledge stay local.
