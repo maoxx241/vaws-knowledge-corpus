@@ -1,6 +1,8 @@
-# NaN or Inf found in a buffer sampled before it is cleared or overwritten is expected and must not be attributed as the defect
+# Pre-clear NaN or Inf alone does not establish a defect root cause
 
 Status: historical, unverified. Confidence: low.
+
+Migration clarification: dismissing an unwritten value requires evidence that the relevant rows are initialized before consumption and that the actual consumer does not read outside them. The historical observation below was not revalidated during migration.
 
 Imported from the project note dated 2026-09-07. The source did not provide a complete reproducible evidence chain. Claims of verification in the historical description are not current support guarantees.
 
