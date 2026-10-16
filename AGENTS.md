@@ -1,9 +1,11 @@
 # Knowledge content repository
 
 The 20 entries already public at commit `9aab5e1e2f1298f992b1b41e403c2b1e0232d12c`
-were explicitly repackaged once on 2026-10-04 with exact body bytes preserved.
-See `docs/material-package-migration-2026-10-04.md`. Admit new contributions
-individually; do not automatically import private material or older Git history.
+were explicitly repackaged once on 2026-10-04 with exact body bytes preserved
+(historical migration records are archived in `mindie-agent/engineering-archive`).
+See `docs/package-format.md` (`docs/package-format.en.md`) for the current package
+specification. Admit new contributions individually; do not automatically import
+private material or older Git history.
 
 A contribution is a complete task package under `tasks/<task_id>/`: `index.md`
 uses `mindie-material-task/1`, and `blocks/<block_id>.md` files use

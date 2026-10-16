@@ -1,49 +1,70 @@
-# MindIE Agent · vLLM-Ascend knowledge
+<p align="center">
+  <img src="assets/brand/banner.svg" alt="MindIE Knowledge — vLLM-Ascend Corpus" width="900">
+</p>
 
-Part of [MindIE Agent](https://github.com/mindie-agent/mindie-agent).
+# MindIE Knowledge — vLLM-Ascend 公共工程知识库
 
-This repository distributes mechanically redacted task material as ordinary
-Markdown files. Each `tasks/<task_id>/` package contains an `index.md` navigation
-manifest and ordered `blocks/*.md` files. The manifest binds every block hash and
-carries fallible retrieval titles and summaries. Failed attempts, later
-corrections and unresolved claims remain part of the reference material.
+中文 | [English](docs/README.en.md)
 
-Consumers use the published files and their existing summaries directly. The
-runtime builds a local ReMe search index without another model summarization
-pass. Summaries and retrieval scores do not certify factual correctness.
+**面向 `vLLM-Ascend` 与昇腾推理工程的公共 Markdown 任务知识包与有用性反馈语料库**
 
-The 20 entries already public at the recorded source commit were explicitly
-[repackaged once](docs/material-package-migration-2026-10-04.md) into 20 task
-manifests and 22 blocks. Their 110,289 body bytes, titles, summaries, conditions
-and entry identities were preserved. Existing feedback retains its original
-revision attribution. No new model summary or business verification was added;
-`status: complete` records completed index packaging only. Private material and
-older Git history are not automatically imported. Optional explicit feedback
-belongs under `feedback/`; an empty corpus remains valid. Public Git history is
-retained for provenance, and consumers follow this repository's main branch. The retired
-`knowledge/vllm-ascend` distribution branch is not a supported source.
+本仓库是 [MindIE Agent](https://github.com/mindie-agent/mindie-agent) 在 `vLLM` / `vLLM-Ascend` 领域的官方公共知识分发源（Canonical Feed），由共享知识运行时 [`mindie-agent/knowledge`](https://github.com/mindie-agent/knowledge) 负责同步、本地索引、外发打包与独立反馈记录。
 
-Publication checks validate the exact Git commit, canonical package structure,
-all referenced blocks and hashes, indexing readiness and public-data redaction.
-The trusted workflow reads the immutable runtime validator from the base commit's
-[publication contract](publication-contract.json). It distinguishes ordinary
-content from development changes and attaches its result to the exact head.
-Contract and Bot-rule changes require development review. Implementation and
-local tests remain distinct from remote CI, delivery and merge acceptance.
+---
 
-Runtime implementation: [mindie-agent/knowledge](https://github.com/mindie-agent/knowledge).
-Codex plugin: [mindie-agent/mindie-agent-codex](https://github.com/mindie-agent/mindie-agent-codex).
+## 核心特性
 
-License: MIT.
+- **真实完整的工程材料（Complete Redacted Material）**：每个任务包保留经确定性规则与 Gitleaks 严格脱敏后的有序公开对话分块（`blocks/<block_id>.md`），包含排障过程、失败尝试、修正结论与适用条件，绝不用大模型摘要替代原始正文。
+- **结构化检索导航（`index.md`）**：每个任务包提供 `mindie-material-task/1` 清单（内嵌 `mindie-entry/3` 元数据头）、分块标题/摘要与短导航，方便 Agent 先检索全貌、再按需读取具体分块。
+- **不可变哈希绑定与闭锁式脱敏**：任务与分块均采用 64 位小写十六进制标识，清单严格绑定每个分块文件的 SHA-256 摘要；任何未通过 `publication-contract.json` 校验或脱敏门禁的内容均被拒绝。
+- **独立有用性反馈（`feedback/*.json`）**：消费方 Agent 在实际参考某条知识或经验后，可针对具体观测修订提交可选的 `up` / `down` 反馈（`mindie-feedback/1`），辅助语料演进与维护。
 
-The [repository Bot operating contract](https://github.com/mindie-agent/knowledge/blob/main/docs/repository-bot-contract.md)
-uses `mindie-content-review/2`. A correction that changes body bytes needs a new
-block identity and a recomputed manifest; metadata-only corrections preserve the
-body identity. Withdrawal removes the complete package. Later contributions use
-the confirmed remote version and unsent blocks, preserving maintainer corrections.
+---
 
-A consumer pins this declaration's SHA256 as part of its product combination.
-Content may advance under the same declaration; a changed declaration requires a
-matching plugin combination. Missing or mismatched declarations are explicit
-failures, not empty corpora. Release order is runtime, content and Bot contract,
-then adapter. Local checks do not establish external Bot adoption or native use.
+## 目录结构
+
+```text
+knowledge-vllm-ascend/
+├── publication-contract.json      # 内容 Schema、校验器版本与审核机器人契约声明
+├── tasks/
+│   └── <64-hex-task-id>/          # 单个完整任务知识包
+│       ├── index.md               # 任务清单 (mindie-material-task/1 + mindie-entry/3)
+│       ├── blocks/
+│       │   └── <64-hex-block-id>.md  # 不可变脱敏正文分块 (mindie-material-block/1)
+│       └── feedback/              # 可选的独立有用性反馈记录 (mindie-feedback/1)
+│           └── <feedback-id>.json
+└── docs/
+    ├── README.en.md               # 英文仓库主页 (English Homepage)
+    ├── CONTRIBUTING.en.md         # 英文贡献指南 (English Contributing Guide)
+    ├── package-format.md          # 任务知识包格式规范（中文）
+    └── package-format.en.md       # 任务知识包格式规范（英文）
+```
+
+> **布局契约说明**：为兼容已发布的客户端同步校验器（`mindie-knowledge`），本仓库根目录仅放置标准元数据文件（`README.md`、`CONTRIBUTING.md`、`AGENTS.md`、`LICENSE` 等），英文版主页与英文版贡献指南统一位于 [`docs/README.en.md`](docs/README.en.md) 与 [`docs/CONTRIBUTING.en.md`](docs/CONTRIBUTING.en.md)。
+
+---
+
+## 如何使用
+
+### 1. 在 MindIE Agent 插件中自动使用（推荐）
+
+安装 [`mindie-agent-codex`](https://github.com/mindie-agent/mindie-agent-codex) 或 [`mindie-agent-cc`](https://github.com/mindie-agent/mindie-agent-cc) 后，插件会自动从本仓库同步最新知识包并在本地构建 BM25 与引用检索索引，无需手动克隆本仓库。
+
+### 2. 使用 `mindie-knowledge` CLI 独立同步与检索
+
+```bash
+# 同步最新 vLLM-Ascend 公共知识包到本地缓存
+mindie-knowledge sync --domain vllm-ascend
+
+# 检索相关工程经验与知识包
+mindie-knowledge query --domain vllm-ascend --query "AscendHccl 通信超时或算子精度排查"
+```
+
+---
+
+## 文档与贡献指南
+
+- **任务知识包格式规范**：[中文（`docs/package-format.md`）](docs/package-format.md) · [English (`docs/package-format.en.md`)](docs/package-format.en.md)
+- **贡献指南**：[中文（`CONTRIBUTING.md`）](CONTRIBUTING.md) · [English (`docs/CONTRIBUTING.en.md`)](docs/CONTRIBUTING.en.md)
+- **审核机器人契约**：[`mindie-content-review/2`](https://github.com/mindie-agent/knowledge/blob/main/docs/repository-bot-contract.md)
+- **核心设计原则**：[MindIE Agent 九条设计原则](https://github.com/mindie-agent/mindie-agent/blob/main/docs/design-principles.md)
