@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="../assets/brand/banner.svg" alt="MindIE Knowledge — vLLM-Ascend Corpus" width="900">
-</p>
-
 # MindIE Knowledge — vLLM-Ascend Public Corpus
 
 [中文](../README.md) | English
